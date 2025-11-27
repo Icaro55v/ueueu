@@ -3,7 +3,7 @@ import {
   CheckCircle, Shield, User, Users, Leaf, Settings, Send, Star, Heart, 
   BarChart2, TrendingUp, Award, AlertCircle, Download, MessageSquare, 
   Printer, Lock, Edit3, Trash2, Plus, Link as LinkIcon, ChevronRight, Eye, LogOut, ArrowLeft,
-  Trophy, Calendar, Database
+  Trophy, Calendar, Database, Linkedin
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -62,7 +62,7 @@ const App = () => {
   const [surveys, setSurveys] = useState([]);
   const [selectedSurvey, setSelectedSurvey] = useState(null);
 
-  // 1. Autenticação Anônima (Necessária para acessar o banco)
+  // 1. Autenticação Anônima
   useEffect(() => {
     signInAnonymously(auth).catch((error) => {
       console.error("Erro na autenticação anônima:", error);
@@ -78,18 +78,17 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // 2. Buscar Dados do Firebase (Realtime Database)
+  // 2. Buscar Dados do Firebase
   useEffect(() => {
     if (!user) return;
 
-    // A. Carregar Configurações (Nó 'config/settings')
+    // A. Carregar Configurações
     const configRef = ref(db, 'config/settings');
     const unsubConfig = onValue(configRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         setConfig(data);
       } else {
-        // Criar config padrão se não existir e se tiver permissão
         set(configRef, DEFAULT_CONFIG).catch(err => {
             console.error("Erro ao criar config inicial:", err);
             if (err.code === 'PERMISSION_DENIED') {
@@ -103,7 +102,7 @@ const App = () => {
         setAuthError("Erro de Conexão com Banco de Dados.");
     });
 
-    // B. Carregar Respostas (Nó 'surveys')
+    // B. Carregar Respostas
     const surveysRef = ref(db, 'surveys');
     const unsubSurveys = onValue(surveysRef, (snapshot) => {
       const data = snapshot.val();
@@ -119,7 +118,6 @@ const App = () => {
       }
     }, (error) => console.error("Erro ao carregar surveys:", error));
 
-    // Router simples baseado na URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('mode') === 'survey') {
       setView('survey');
@@ -148,7 +146,7 @@ const App = () => {
       await set(ref(db, 'config/settings'), newConfig);
     } catch (e) {
       console.error("Error updating config", e);
-      alert("Erro ao salvar configurações no Firebase.");
+      alert("Erro ao salvar configurações.");
     }
   };
 
@@ -163,24 +161,17 @@ const App = () => {
       setView('survey-success');
     } catch (e) {
       console.error("Error submitting survey", e);
-      alert("Erro ao enviar avaliação. Tente novamente.");
+      alert("Erro ao enviar avaliação.");
     }
   };
 
-  // --- TELA DE ERRO ---
   if (authError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center">
         <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Erro de Conexão Firebase</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Erro de Conexão</h2>
             <p className="text-gray-600 mb-6 text-sm">{authError}</p>
-            <div className="text-left bg-gray-100 p-4 rounded text-xs text-gray-500 space-y-2">
-                <p><strong>Verifique no Console:</strong></p>
-                <p>1. Auth Anônimo ativado?</p>
-                <p>2. Banco Realtime Database criado?</p>
-                <p>3. Regras de leitura/escrita permitidas?</p>
-            </div>
             <button onClick={() => window.location.reload()} className="mt-6 w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">
                 Tentar Novamente
             </button>
@@ -193,7 +184,7 @@ const App = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-            <p className="text-gray-500 text-sm">Conectando ao Firebase...</p>
+            <p className="text-gray-500 text-sm">Carregando Sistema...</p>
         </div>
     );
   }
@@ -223,7 +214,6 @@ const App = () => {
         <SurveySuccess onBack={() => window.location.reload()} />
       )}
 
-      {/* Modal Details */}
       {selectedSurvey && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
@@ -241,7 +231,7 @@ const App = () => {
   );
 };
 
-// --- VIEW: LOGIN ---
+// --- VIEW: LOGIN (ATUALIZADO COM LINKEDIN) ---
 const AdminLogin = ({ onLogin, onGoToSurvey }) => {
   const [pass, setPass] = useState('');
 
@@ -286,7 +276,23 @@ const AdminLogin = ({ onLogin, onGoToSurvey }) => {
             Acessar Formulário (Modo Colaborador)
           </button>
         </div>
-        <p className="text-center text-xs text-gray-400 mt-6">Senha padrão: admin123</p>
+        
+        <p className="text-center text-xs text-gray-400 mt-6 mb-2">Senha padrão: admin123</p>
+
+        {/* --- SEÇÃO DO DESENVOLVEDOR --- */}
+        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+            <a 
+              href="https://www.linkedin.com/in/7icaaro" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center text-xs text-gray-400 hover:text-blue-600 transition-colors group"
+            >
+              <span className="mr-1">Desenvolvido por</span>
+              <span className="font-semibold text-gray-600 group-hover:text-blue-600">Ícaro</span>
+              <Linkedin className="w-3 h-3 ml-1 group-hover:text-blue-600" />
+            </a>
+        </div>
+
       </div>
     </div>
   );
@@ -299,7 +305,6 @@ const AdminDashboard = ({ config, surveys, onUpdateConfig, onLogout, onViewSurve
   const [newInstructor, setNewInstructor] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
 
-  // Lógica de Ranking (UseMemo recalculando com dados do Firebase)
   const rankingData = useMemo(() => {
     const stats = {};
     surveys.forEach(survey => {
@@ -330,7 +335,6 @@ const AdminDashboard = ({ config, surveys, onUpdateConfig, onLogout, onViewSurve
   }, [surveys, config, selectedMonth]);
 
   const copySurveyLink = () => {
-    // Como não estamos no Firebase Hosting, usamos a URL atual
     const url = `${window.location.origin}${window.location.pathname}?mode=survey`;
     const textArea = document.createElement("textarea");
     textArea.value = url;
@@ -433,7 +437,6 @@ const AdminDashboard = ({ config, surveys, onUpdateConfig, onLogout, onViewSurve
           </button>
         </div>
 
-        {/* CONTENT: RANKING */}
         {activeTab === 'ranking' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
              <div className="p-6 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-gray-50 to-white">
@@ -506,7 +509,6 @@ const AdminDashboard = ({ config, surveys, onUpdateConfig, onLogout, onViewSurve
           </div>
         )}
 
-        {/* CONTENT: SURVEYS LIST */}
         {activeTab === 'surveys' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -552,7 +554,6 @@ const AdminDashboard = ({ config, surveys, onUpdateConfig, onLogout, onViewSurve
           </div>
         )}
 
-        {/* CONTENT: SETTINGS */}
         {activeTab === 'settings' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Object.keys(config.areas).map((key) => {
